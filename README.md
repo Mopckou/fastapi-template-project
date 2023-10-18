@@ -2,8 +2,8 @@
 
 # Features
 - Async FastApi
-- Async SQLAlchemy session
-- Async python-dependency-injector
+- Async SQLAlchemy
+- Python-dependency-injector
 
 ## Installation
 [Install](<https://python-poetry.org/docs/#installation>)  poetry. Check version:
