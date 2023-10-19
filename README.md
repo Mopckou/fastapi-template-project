@@ -1,4 +1,5 @@
-# Fastapi-template-project
+# Async Fastapi + SqlAlchemy 2.0 (asyncio) + Python-dependency-injector
+A simple fastapi project, ready to use.
 
 # Features
 - Async FastApi
