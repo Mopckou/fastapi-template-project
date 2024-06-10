@@ -1,11 +1,9 @@
 import logging
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from asyncio import current_task
-from contextlib import AbstractContextManager, asynccontextmanager
-from typing import Callable
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import declarative_base, DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase
 
 from sqlalchemy.ext.asyncio import (
     async_scoped_session,

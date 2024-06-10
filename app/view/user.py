@@ -2,23 +2,25 @@ from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends
 
 from app.containers import Container
-from app.schemas.user import User
+from app.schemas.user import NewUserResponse, UserRequest, UsersResponse
 from app.services.user import UserService
 
 router = APIRouter(
-    tags=["users"]
+    tags=["users"],
 )
 
 
-@router.get("/users")
+@router.get("/users", response_model=UsersResponse)
 @inject
-async def get_users(user: UserService = Depends(Provide[Container.user_service])):
-    return {"users": await user.get_users()}
+async def get_users(user_service: UserService = Depends(Provide[Container.services.user])):
+    users = await user_service.get_members()
+
+    return {"result": users}
 
 
-@router.post("/user/create")
+@router.post("/users", response_model=NewUserResponse)
 @inject
-async def create_user(user: User, user_service: UserService = Depends(Provide[Container.user_service])):
-    new_user = await user_service.create_user(user)
+async def create_user(request_model: UserRequest, user_service: UserService = Depends(Provide[Container.services.user])):
+    new_user = await user_service.create(request_model)
 
-    return {"id": new_user.id}
+    return {"result": new_user}
