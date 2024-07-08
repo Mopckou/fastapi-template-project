@@ -1,6 +1,7 @@
 from dependency_injector import containers, providers
 
 from app.utils.database import PostgresDataBaseMaker
+from .services.space import SpaceService
 from .services.user import UserService
 from .settings import get_settings
 from .utils.uow import PgUnitOfWork
@@ -28,6 +29,11 @@ class ApplicationLayerServices(containers.DeclarativeContainer):
 
     user = providers.Factory(
         UserService,
+        uow=unit_of_works.pg
+    )
+
+    space = providers.Factory(
+        SpaceService,
         uow=unit_of_works.pg
     )
 
