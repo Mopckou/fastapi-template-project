@@ -36,8 +36,31 @@ def upgrade() -> None:
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=func.now()),
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True, server_default=func.now())
     )
+    op.create_table(
+        'spaces',
+        sa.Column('id', sa.Integer, primary_key=True),
+        sa.Column('parent_id', sa.Integer),
+        sa.Column('name', sa.String(256), nullable=False, unique=True),
+        sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=func.now()),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True, server_default=func.now())
+    )
+    op.create_table(
+        'projects',
+        sa.Column('id', sa.Integer, primary_key=True),
+        sa.Column('name', sa.String(256), nullable=False),
+        sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=func.now()),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True, server_default=func.now())
+    )
+    op.create_table(
+        'projects_spaces',
+        sa.Column('project_id', sa.Integer, sa.ForeignKey('projects.id'), nullable=False),
+        sa.Column('space_id', sa.Integer, sa.ForeignKey('spaces.id'), nullable=False),
+    )
 
 
 def downgrade() -> None:
     op.drop_table('user')
     op.drop_table('password')
+    op.drop_table('spaces')
+    op.drop_table('projects')
+    op.drop_table('projects_spaces')

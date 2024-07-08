@@ -6,7 +6,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repositories.base import IRepositoryBase
-from app.repositories.user import UserRepository
+from app.repositories.space import ISpaceRepository, SpaceRepository
+from app.repositories.user import UserRepository, IUserRepository
 
 
 class NotCreatedSessionError(NotImplementedError):
@@ -29,7 +30,8 @@ def handle_error(exc_type, exc_value, traceback):
 
 
 class IUnitOfWorkBase(ABC):
-    users: IRepositoryBase
+    users: IUserRepository
+    spaces: ISpaceRepository
 
     async def __aenter__(self):
         return self
@@ -52,6 +54,7 @@ class IUnitOfWorkBase(ABC):
 
 class PgUnitOfWork(IUnitOfWorkBase):
     users: UserRepository
+    spaces: SpaceRepository
 
     def __init__(self, session_factory: Callable[..., AsyncSession]) -> None:
         self._session_factory = session_factory
@@ -81,6 +84,13 @@ class PgUnitOfWork(IUnitOfWorkBase):
     @property
     def users(self):
         if self._async_session is None:
-            raise NotCreatedSessionError()
+            raise NotCreatedSessionError
 
         return UserRepository(self._async_session)
+
+    @property
+    def spaces(self):
+        if self._async_session is None:
+            raise NotCreatedSessionError
+
+        return SpaceRepository(self._async_session)

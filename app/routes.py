@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.view import user
+from app.view import user, space
 
 v1 = APIRouter(
     prefix="/v1",
@@ -8,3 +8,4 @@ v1 = APIRouter(
 )
 
 v1.include_router(user.router)
+v1.include_router(space.router)

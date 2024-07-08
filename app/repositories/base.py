@@ -14,7 +14,7 @@ class IRepositoryBase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def get_by_id(self, id: Union[int, UUID]) -> Iterator[Row]:
+    async def get_by_id(self, id: Union[int, UUID]) -> Row:
         raise NotImplementedError()
 
     @abstractmethod

@@ -4,13 +4,13 @@ from app.containers import Container
 from app import middlewares
 from app.middlewares import CustomRequestMiddleware
 from app.routes import v1
-from app.view import tech, user
+from app.view import tech, user, space
 from app.utils.exception_handlers import add_error_handlers
 
 
 def create_app() -> FastAPI:
     container = Container()
-    container.wire(modules=[middlewares, user])
+    container.wire(modules=[middlewares, user, space])
     app = FastAPI(
         title="ExampleApi",
         description="Backend for awesome service.",
