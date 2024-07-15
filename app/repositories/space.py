@@ -36,43 +36,13 @@ class SpaceRepository(BaseRepository, ISpaceRepository):
         return SpaceEntity(**vars(project))
 
     async def get_by_id(self, id: Union[int, UUID]) -> SpaceEntity | None:
-        parent_alias = aliased(SpaceModel, name='s')
-        parent_table = select(SpaceModel).where(SpaceModel.id == id).cte("parent_table", recursive=True)
+        parent_alias = aliased(SpaceModel)
 
-        q = parent_table.union(
-            select(parent_alias).join(
-                parent_table, parent_table.c.id == parent_alias.parent_id
-            )
-        )
-        r = aliased(SpaceModel, alias=q)  # этот элиас позволяет вывести объекты в результате
         result = (await self._session.scalars(
-            select(r)
-        )).unique().all()
-        dicts = {elem.id: elem for elem in result}
+            select(SpaceModel).options(
+                selectinload(SpaceModel.children, recursion_depth=3),
+                selectinload(SpaceModel.parent, recursion_depth=3),  # проверить как работает глубина рекурсии
+            ).where(SpaceModel.id == id).join(SpaceModel.parent.of_type(parent_alias), full=True)
+        )).unique().one_or_none()
 
-        return to_three(id, dicts)
-
-
-def to_three(id: int, spaces: dict[int, SpaceModel]):
-    spaces_models = {
-        int(model.id): SpaceEntity(**vars(model)) for model in spaces.values()
-    }
-
-    for i, v in spaces.items():
-
-        if v.parent_id not in spaces_models:
-            continue
-
-        parent_space = spaces_models.get(v.parent_id)
-        if not parent_space:
-            raise Exception("Model is empty")
-
-        current_model = spaces_models.get(v.id)
-        if not current_model:
-            raise Exception("Model is not found")
-
-        current_model.parent = parent_space
-
-        parent_space.children.append(current_model)
-
-    return spaces_models[id]
+        return SpaceEntity(**vars(result)) if result else None
