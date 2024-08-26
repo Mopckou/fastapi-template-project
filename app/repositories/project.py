@@ -45,3 +45,54 @@ class ProjectRepository(BaseRepository, IProjectRepository):
 
 
         return ProjectEntity(**vars(service))
+
+
+
+    async def get_by_id(self, id: Union[int, UUID]) -> Iterator[SpaceEntity]:
+        parent_alias = aliased(SpaceModel)
+        # result = (await self._session.scalars(
+        #     select(SpaceModel).options(
+        #         joinedload(SpaceModel.children),
+        #         joinedload(SpaceModel.parent)
+        #     ).where(SpaceModel.id == id).join(SpaceModel.parent.of_type(parent_alias), full=True)
+        # )).unique().all()
+
+        result = (await self._session.scalars(
+            select(SpaceModel).options(
+                #selectinload(SpaceModel.children, recursion_depth=2),
+                selectinload(SpaceModel.parent, recursion_depth=2), # проверить как работает глубина рекурсии
+                # joinedload(SpaceModel.projects_associations),
+                # joinedload(SpaceModel.projects)
+            ).where(SpaceModel.id == id).join(SpaceModel.parent.of_type(parent_alias), full=True)
+        )).unique().all()
+
+        return [SpaceEntity(**vars(model)) for model in result]
+
+    # async def get_by_id(self, id: Union[int, UUID]) -> list:
+    #     parent_alias = aliased(SpaceModel, name='s')
+    #
+    #     # result = (await self._session.scalars(
+    #     #     select(SpaceModel).options(
+    #     #         selectinload(SpaceModel.children, recursion_depth=1),
+    #     #         selectinload(SpaceModel.parent, recursion_depth=1),
+    #     #         joinedload(SpaceModel.projects_associations),
+    #     #         joinedload(SpaceModel.projects)
+    #     #     ).where(SpaceModel.id == id).join(SpaceModel.parent.of_type(parent_alias), full=True)
+    #     #
+    #     # )).unique().all()
+    #
+    #     parent_table = select(SpaceModel).where(SpaceModel.id == 3).cte("parent_table", recursive=True)
+    #     parent_table_alias = aliased(SpaceModel, parent_table, name='p')
+    #     q = parent_table.union(
+    #         select(parent_alias).join(
+    #             parent_table, parent_table.c.id == parent_alias.parent_id
+    #         )
+    #     )
+    #     r = aliased(SpaceModel, alias=q)  # этот элиас позволяет вывести объекты в результате
+    #     result = (await self._session.scalars(
+    #         select(r)
+    #     )).unique().all()
+    #     print(result)
+    #     print(result[0])
+    #
+    #     return [SpaceEntity(**vars(model)) for model in result]
