@@ -2,7 +2,7 @@ import logging
 from abc import ABC, abstractmethod
 from asyncio import current_task
 
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase
 
 from sqlalchemy.ext.asyncio import (
@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import (
 logger = logging.getLogger(__name__)
 
 
-class Base(DeclarativeBase):
+class Base(AsyncAttrs, DeclarativeBase):
     pass
 
 

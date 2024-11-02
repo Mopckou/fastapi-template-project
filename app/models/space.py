@@ -1,10 +1,13 @@
 import datetime
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy import String, DateTime, Integer, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from app.utils.database import Base
+
+
+DEPTH = 5
 
 
 class SpaceModel(Base):
@@ -16,13 +19,8 @@ class SpaceModel(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, onupdate=datetime.datetime.now)
     parent_id: Mapped[int] = mapped_column(Integer, ForeignKey("spaces.id"))
 
-    children: Mapped[List['SpaceModel']] = relationship(back_populates="parent")
-    parent: Mapped['SpaceModel'] = relationship(back_populates="children", remote_side=[id])
-
-    # projects_associations: Mapped[List['ProjectSpaceModel']] = relationship(back_populates="space") # noqa
-    # projects: Mapped[List["ProjectModel"]] = relationship( # noqa
-    #     secondary="projects_spaces", back_populates="space", viewonly=True
-    # )
+    children: Mapped[List['SpaceModel']] = relationship(back_populates="parent", lazy="joined", join_depth=1)
+    parent: Mapped[Optional['SpaceModel']] = relationship(back_populates="children", remote_side=[id], lazy="joined", join_depth=DEPTH)
 
     def __repr__(self):
         return f"<SpaceModel(id={self.id}, " \

@@ -53,8 +53,8 @@ class IUnitOfWorkBase(ABC):
 
 
 class PgUnitOfWork(IUnitOfWorkBase):
-    users: UserRepository
-    spaces: SpaceRepository
+    users: IUserRepository
+    spaces: ISpaceRepository
 
     def __init__(self, session_factory: Callable[..., AsyncSession]) -> None:
         self._session_factory = session_factory

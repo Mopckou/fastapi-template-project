@@ -32,4 +32,5 @@ services:
         depends_on:
             - migration
         environment:
-            DB_URL: postgresql+asyncpg://user:pass@pg:5432/app
+            DB_URL: postgresql+asyncpg://user:pass@pg:5434/app
+            DEBUG: true
