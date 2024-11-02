@@ -52,7 +52,7 @@ class SpaceRepository(BaseRepository, ISpaceRepository):
 
         if depth == 0:
             raw_parent = await model.awaitable_attrs.parent
-            parent = await self.map_to_entity(raw_parent, DEPTH)
+            parent = await self.map_to_entity(raw_parent, DEPTH - 1)
         else:
             parent = await self.map_to_entity(model.parent, depth - 1)
 

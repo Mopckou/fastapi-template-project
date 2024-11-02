@@ -19,8 +19,8 @@ class SpaceModel(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, onupdate=datetime.datetime.now)
     parent_id: Mapped[int] = mapped_column(Integer, ForeignKey("spaces.id"))
 
-    children: Mapped[List['SpaceModel']] = relationship(back_populates="parent", lazy="joined", join_depth=1)
-    parent: Mapped[Optional['SpaceModel']] = relationship(back_populates="children", remote_side=[id], lazy="joined", join_depth=DEPTH)
+    children: Mapped[List['SpaceModel']] = relationship(back_populates="parent", lazy="selectin", join_depth=1)
+    parent: Mapped[Optional['SpaceModel']] = relationship(back_populates="children", remote_side=[id], lazy="selectin", join_depth=DEPTH)
 
     def __repr__(self):
         return f"<SpaceModel(id={self.id}, " \
