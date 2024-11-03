@@ -10,7 +10,7 @@ class SpaceService:
     async def get_three_by_id(self, space_id: int) -> SpaceEntity:
         async with self._uow as uow:
             space = await uow.spaces.get_by_id(
-                id=space_id
+                space_id=space_id
             )
 
         return space
