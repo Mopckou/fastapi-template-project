@@ -41,13 +41,14 @@ class SpaceRepository(BaseRepository, ISpaceRepository):
 
         q = parent_table.union(
             select(parent_alias).join(
-                parent_table, parent_table.c.id == parent_alias.parent_id
+                parent_table, parent_table.c.parent_id == parent_alias.id
             )
         )
         r = aliased(SpaceModel, alias=q)  # этот элиас позволяет вывести объекты в результате
         result = (await self._session.scalars(
             select(r)
         )).unique().all()
+
         dicts = {elem.id: elem for elem in result}
 
         return to_three(id, dicts)
@@ -72,7 +73,5 @@ def to_three(id: int, spaces: dict[int, SpaceModel]):
             raise Exception("Model is not found")
 
         current_model.parent = parent_space
-
-        parent_space.children.append(current_model)
 
     return spaces_models[id]
