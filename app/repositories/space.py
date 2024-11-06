@@ -47,31 +47,16 @@ class SpaceRepository(BaseRepository, ISpaceRepository):
         r = aliased(SpaceModel, alias=q)  # этот элиас позволяет вывести объекты в результате
         result = (await self._session.scalars(
             select(r)
-        )).unique().all()
+        )).unique().fetchall()
 
-        dicts = {elem.id: elem for elem in result}
+        return self.map_to_entity(result[0])
 
-        return to_three(id, dicts)
+    def map_to_entity(self, model: SpaceModel | None) -> SpaceEntity | None:
+        if not model:
+            return None
 
-
-def to_three(id: int, spaces: dict[int, SpaceModel]):
-    spaces_models = {
-        int(model.id): SpaceEntity(**vars(model)) for model in spaces.values()
-    }
-
-    for i, v in spaces.items():
-
-        if v.parent_id not in spaces_models:
-            continue
-
-        parent_space = spaces_models.get(v.parent_id)
-        if not parent_space:
-            raise Exception("Model is empty")
-
-        current_model = spaces_models.get(v.id)
-        if not current_model:
-            raise Exception("Model is not found")
-
-        current_model.parent = parent_space
-
-    return spaces_models[id]
+        return SpaceEntity(
+            id=model.id,
+            name=model.name,
+            parent=self.map_to_entity(model.parent)
+        )
