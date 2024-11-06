@@ -36,7 +36,7 @@ class SpaceRepository(BaseRepository, ISpaceRepository):
 
         return SpaceEntity(**vars(project))
 
-    async def get_by_id(self, space_id: int) -> SpaceEntity | None:
+    async def get_by_id(self, id: int) -> SpaceEntity | None:
         """
         Чистый sql запрос:
             WITH RECURSIVE parent_table(id, name, parent_id, ids, cycle) AS (
@@ -55,7 +55,7 @@ class SpaceRepository(BaseRepository, ISpaceRepository):
 
         parent_table = (
             select(SpaceModel.id, SpaceModel.name, SpaceModel.parent_id, SpaceModel.created_at, SpaceModel.updated_at, (array([column("id")])).label("ids"), literal(False).label('cycle'))
-            .where(SpaceModel.id == space_id)
+            .where(SpaceModel.id == id)
             .cte("parent_table", recursive=True)
         )
         children_alias = aliased(SpaceModel, name='s')
@@ -74,35 +74,20 @@ class SpaceRepository(BaseRepository, ISpaceRepository):
             .where(parent_table.c.cycle == False)
         )
 
-        r = aliased(SpaceModel, alias=q)
         result = (await self._session.scalars(
-            select(r)
+            select(aliased(SpaceModel, alias=q))
         )).unique().fetchall()
 
-        spaces_dict = {elem.id: elem for elem in result}
+        return self.map_to_entity(
+            result[0] if result else None
+        )  # noqa
 
-        return to_three(space_id, spaces_dict)  # noqa
+    def map_to_entity(self, model: SpaceModel | None) -> SpaceEntity | None:
+        if not model:
+            return None
 
-
-def to_three(space_id: int, spaces: dict[int, SpaceModel]):
-    spaces_models = {
-        int(model.id): SpaceEntity(id=model.id, name=model.name)
-        for model in spaces.values()
-    }
-
-    for i, v in spaces.items():
-
-        if v.parent_id not in spaces_models:
-            continue
-
-        parent_space = spaces_models.get(v.parent_id)
-        if not parent_space:
-            raise Exception("Model is empty")
-
-        current_model = spaces_models.get(v.id)
-        if not current_model:
-            raise Exception("Model is not found")
-
-        current_model.parent = parent_space
-
-    return spaces_models[space_id]
+        return SpaceEntity(
+            id=model.id,
+            name=model.name,
+            parent=self.map_to_entity(model.parent)
+        )
