@@ -1,13 +1,12 @@
 from abc import abstractmethod
-from typing import Union, Iterator
+from typing import Union
 from uuid import UUID
 
-from sqlalchemy import Row, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import aliased, joinedload, selectinload, query, Mapped, immediateload
 
 from app.entities.space import SpaceEntity
-from app.models.space import SpaceModel, DEPTH
+from app.models.space import SpaceModel
 from app.repositories.base import BaseRepository, IRepositoryBase
 
 
@@ -41,23 +40,18 @@ class SpaceRepository(BaseRepository, ISpaceRepository):
     async def get_by_id(self, id: Union[int, UUID]) -> SpaceEntity | None:
         result = (await self._session.scalars(
             select(SpaceModel).where(SpaceModel.id == id)
-
         )).unique().one_or_none()
 
-        return await self.map_to_entity(result, DEPTH)
+        return await self.map_to_entity(result)
 
-    async def map_to_entity(self, model: SpaceModel | None, depth: int) -> SpaceEntity | None:
+    async def map_to_entity(self, model: SpaceModel | None) -> SpaceEntity | None:
         if not model:
             return None
 
-        if depth == 0:
-            raw_parent = await model.awaitable_attrs.parent
-            parent = await self.map_to_entity(raw_parent, DEPTH - 1)
-        else:
-            parent = await self.map_to_entity(model.parent, depth - 1)
+        parent = await model.awaitable_attrs.parent
 
         return SpaceEntity(
             id=model.id,
             name=model.name,
-            parent=parent
+            parent=await self.map_to_entity(parent)
         )
