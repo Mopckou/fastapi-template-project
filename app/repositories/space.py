@@ -41,23 +41,23 @@ class SpaceRepository(BaseRepository, ISpaceRepository):
     async def get_by_id(self, id: Union[int, UUID]) -> SpaceEntity | None:
         result = (await self._session.scalars(
             select(SpaceModel).where(SpaceModel.id == id)
-
         )).unique().one_or_none()
 
-        return await self.map_to_entity(result, DEPTH)
+        return await map_to_entity(result, DEPTH)
 
-    async def map_to_entity(self, model: SpaceModel | None, depth: int) -> SpaceEntity | None:
-        if not model:
-            return None
 
-        if depth == 0:
-            raw_parent = await model.awaitable_attrs.parent
-            parent = await self.map_to_entity(raw_parent, DEPTH)
-        else:
-            parent = await self.map_to_entity(model.parent, depth - 1)
+async def map_to_entity(model: SpaceModel | None, depth: int) -> SpaceEntity | None:
+    if not model:
+        return None
 
-        return SpaceEntity(
-            id=model.id,
-            name=model.name,
-            parent=parent
-        )
+    if depth == 0:
+        parent_model = await model.awaitable_attrs.parent
+        parent_entity = await map_to_entity(parent_model, DEPTH)
+    else:
+        parent_entity = await map_to_entity(model.parent, depth - 1)
+
+    return SpaceEntity(
+        id=model.id,
+        name=model.name,
+        parent=parent_entity
+    )
