@@ -54,40 +54,49 @@ class SpaceRepository(BaseRepository, ISpaceRepository):
         """
 
         parent_table = (
-            select(SpaceModel.id, SpaceModel.name, SpaceModel.parent_id, SpaceModel.created_at, SpaceModel.updated_at, (array([column("id")])).label("ids"), literal(False).label('cycle'))
+            select(
+                SpaceModel.id,
+                SpaceModel.name,
+                SpaceModel.parent_id,
+                SpaceModel.created_at,
+                SpaceModel.updated_at,
+                (array([column("id")])).label("ids"),
+                literal(False).label('cycle')
+            )
             .where(SpaceModel.id == id)
             .cte("parent_table", recursive=True)
         )
-        children_alias = aliased(SpaceModel, name='s')
+        space_alias = aliased(SpaceModel, name='s')
 
-        q = parent_table.union(
+        query = parent_table.union(
             select(
-                children_alias.id,
-                children_alias.name,
-                children_alias.parent_id,
-                children_alias.created_at,
-                children_alias.updated_at,
-                (column('ids').op('||')(children_alias.id)).label("ids"),
-                parent_table.c.ids.any(children_alias.id).label("cycle")
+                space_alias.id,
+                space_alias.name,
+                space_alias.parent_id,
+                space_alias.created_at,
+                space_alias.updated_at,
+                (column('ids').op('||')(space_alias.id)).label("ids"),
+                parent_table.c.ids.any(space_alias.id).label("cycle")
             )
-            .join(parent_table, parent_table.c.parent_id == children_alias.id)
+            .join(parent_table, parent_table.c.parent_id == space_alias.id)
             .where(parent_table.c.cycle == False)
         )
 
         result = (await self._session.scalars(
-            select(aliased(SpaceModel, alias=q))
+            select(aliased(SpaceModel, alias=query))
         )).unique().fetchall()
 
-        return self.map_to_entity(
+        return map_to_entity(
             result[0] if result else None
         )  # noqa
 
-    def map_to_entity(self, model: SpaceModel | None) -> SpaceEntity | None:
-        if not model:
-            return None
 
-        return SpaceEntity(
-            id=model.id,
-            name=model.name,
-            parent=self.map_to_entity(model.parent)
-        )
+def map_to_entity(model: SpaceModel | None) -> SpaceEntity | None:
+    if not model:
+        return None
+
+    return SpaceEntity(
+        id=model.id,
+        name=model.name,
+        parent=map_to_entity(model.parent)
+    )
