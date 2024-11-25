@@ -5,7 +5,7 @@ migration-up:
 	alembic upgrade head
 
 compose-up:
-	docker-compose up --build -d
+	docker-compose up --build
 
 compose-down:
 	docker-compose down
