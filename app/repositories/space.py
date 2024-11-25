@@ -1,10 +1,7 @@
 from abc import abstractmethod
-from typing import Union, Iterator
-from uuid import UUID
 
-from sqlalchemy import Row, select, bindparam, text
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import aliased, joinedload, selectinload, query, Mapped
 
 from app.entities.space import SpaceEntity
 from app.models.space import SpaceModel
@@ -35,7 +32,7 @@ class SpaceRepository(BaseRepository, ISpaceRepository):
 
         return SpaceEntity(**vars(project))
 
-    async def get_by_id(self, space_id: int) -> SpaceEntity | None:
+    async def get_by_id(self, id: int) -> SpaceEntity | None:
         result = (await self._session.execute(
             text("""
                 WITH RECURSIVE parent_table(id, name, parent_id, ids, cycle) AS (
@@ -48,33 +45,33 @@ class SpaceRepository(BaseRepository, ISpaceRepository):
                 WHERE not cycle
                 )
                 SELECT * FROM parent_table
-            """).bindparams(val=space_id),
+            """).bindparams(val=id),
         )).fetchall()
 
         spaces_dict = {elem.id: elem for elem in result}
 
-        return to_three(space_id, spaces_dict)  # noqa
+        return to_three(id, spaces_dict) if result else None
 
 
-def to_three(space_id: int, spaces: dict[int, SpaceModel]):
-    spaces_models = {
+def to_three(space_id: int, models: dict[int, SpaceModel]):
+    entities = {
         int(model.id): SpaceEntity(id=model.id, name=model.name)
-        for model in spaces.values()
+        for model in models.values()
     }
 
-    for i, v in spaces.items():
+    for _, v in models.items():
 
-        if v.parent_id not in spaces_models:
+        if v.parent_id not in entities:
             continue
 
-        parent_space = spaces_models.get(v.parent_id)
+        parent_space = entities.get(v.parent_id)
         if not parent_space:
             raise Exception("Model is empty")
 
-        current_model = spaces_models.get(v.id)
-        if not current_model:
+        space = entities.get(v.id)
+        if not space:
             raise Exception("Model is not found")
 
-        current_model.parent = parent_space
+        space.parent = parent_space
 
-    return spaces_models[space_id]
+    return entities[space_id]

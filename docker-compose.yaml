@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-    database:
+    pg:
         image: postgres:12-alpine
         ports:
             - "5432:5432"
@@ -10,7 +10,7 @@ services:
             - POSTGRES_PASSWORD=pass
             - POSTGRES_DB=app
         healthcheck:
-            test: [ "CMD-SHELL", "sh -c 'pg_isready -U postgres -d ${POSTGRES_DB}'" ]
+            test: [ "CMD-SHELL", "sh -c 'pg_isready -U user -d ${POSTGRES_DB}'" ]
             interval: 10s
             timeout: 3s
             retries: 3
@@ -20,20 +20,17 @@ services:
         image: app
         command: alembic upgrade head
         environment:
-            SQLALCHEMY_DATABASE_URI: postgresql://user:pass@database:5432/app
-        links:
-            - database
+            SQLALCHEMY_DATABASE_URI: postgresql://user:pass@pg:5432/app
         restart: on-failure
         depends_on:
-            - database
+            - pg
 
     server:
         image: app
         ports:
             - "8080:8080"
-        links:
-            - database
         depends_on:
             - migration
         environment:
-            DB_URL: postgresql+asyncpg://user:pass@database:5432/app
+            DB_URL: postgresql+asyncpg://user:pass@pg:5432/app
+            DEBUG: 1

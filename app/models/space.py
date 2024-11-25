@@ -1,8 +1,7 @@
 import datetime
-from typing import List, Optional
 
 from sqlalchemy import String, DateTime, Integer, ForeignKey
-from sqlalchemy.orm import mapped_column, Mapped, relationship
+from sqlalchemy.orm import mapped_column, Mapped
 
 from app.utils.database import Base
 
@@ -15,9 +14,6 @@ class SpaceModel(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.datetime.now)
     updated_at: Mapped[datetime] = mapped_column(DateTime, onupdate=datetime.datetime.now)
     parent_id: Mapped[int] = mapped_column(Integer, ForeignKey("spaces.id"))
-
-    children: Mapped[List['SpaceModel']] = relationship(back_populates="parent")
-    parent: Mapped[Optional['SpaceModel']] = relationship(back_populates="children", remote_side=[id])
 
     def __repr__(self):
         return f"<SpaceModel(id={self.id}, " \
