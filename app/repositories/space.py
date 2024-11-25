@@ -44,12 +44,12 @@ class SpaceRepository(BaseRepository, ISpaceRepository):
                 parent_table, parent_table.c.parent_id == parent_alias.id
             )
         )
-        r = aliased(SpaceModel, alias=q)  # этот элиас позволяет вывести объекты в результате
+
         result = (await self._session.scalars(
-            select(r)
+            select(aliased(SpaceModel, alias=q))
         )).unique().fetchall()
 
-        return self.map_to_entity(result[0])
+        return self.map_to_entity(result[0]) if result else None
 
     def map_to_entity(self, model: SpaceModel | None) -> SpaceEntity | None:
         if not model:
