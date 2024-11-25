@@ -13,7 +13,7 @@ class SpaceService:
     async def get_three_by_id(self, space_id: int) -> SpaceEntity:
         async with self._uow as uow:
             space = await uow.spaces.get_by_id(
-                id=space_id
+                space_id=space_id
             )
 
         return space
@@ -32,7 +32,7 @@ class SpaceService:
 
             parent_space_id = space_id
             for value in xrange(1, depth[0] + 1):
-                name = fake.word() + " " + str(fake.random_digit())
+                name = fake.name() + " " + fake.word() + " " + str(fake.random_digit())
                 new_space = await uow.spaces.create(
                     name=name,
                     parent_space_id=parent_space_id

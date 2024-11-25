@@ -29,5 +29,5 @@ class CustomRequestMiddleware:
             await self.app(scope, receive, send)
             return
 
-        print(await users.get_members())
+        # print(await users.get_members())
         await self.app(scope, receive, send)

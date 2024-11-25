@@ -4,7 +4,7 @@ services:
     pg:
         image: postgres:12-alpine
         ports:
-            - "5434:5432"
+            - "5432:5432"
         environment:
             - POSTGRES_USER=user
             - POSTGRES_PASSWORD=pass
@@ -32,5 +32,5 @@ services:
         depends_on:
             - migration
         environment:
-            DB_URL: postgresql+asyncpg://user:pass@pg:5434/app
-            DEBUG: true
+            DB_URL: postgresql+asyncpg://user:pass@pg:5432/app
+            DEBUG: 1

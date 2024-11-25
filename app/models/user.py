@@ -18,7 +18,7 @@ class UserModel(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.datetime.now)
     updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=True, onupdate=datetime.datetime.now)
 
-    password: Mapped["PasswordModel"] = relationship(back_populates="user", lazy="selectin")
+    password: Mapped["PasswordModel"] = relationship(back_populates="user")
 
     def __repr__(self):
         return f"<UserModel(id={self.id}, " \

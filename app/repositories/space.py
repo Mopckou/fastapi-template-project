@@ -1,6 +1,4 @@
 from abc import abstractmethod
-from typing import Union
-from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -37,21 +35,22 @@ class SpaceRepository(BaseRepository, ISpaceRepository):
             name=space.name,
         )
 
-    async def get_by_id(self, id: Union[int, UUID]) -> SpaceEntity | None:
+    async def get_by_id(self, space_id: int) -> SpaceEntity | None:
         result = (await self._session.scalars(
-            select(SpaceModel).where(SpaceModel.id == id)
+            select(SpaceModel).where(SpaceModel.id == space_id)
         )).unique().one_or_none()
 
-        return await self.map_to_entity(result)
+        return await map_to_entity(result)
 
-    async def map_to_entity(self, model: SpaceModel | None) -> SpaceEntity | None:
-        if not model:
-            return None
 
-        parent = await model.awaitable_attrs.parent
+async def map_to_entity(model: SpaceModel | None) -> SpaceEntity | None:
+    if not model:
+        return None
 
-        return SpaceEntity(
-            id=model.id,
-            name=model.name,
-            parent=await self.map_to_entity(parent)
-        )
+    parent = await model.awaitable_attrs.parent
+
+    return SpaceEntity(
+        id=model.id,
+        name=model.name,
+        parent=await map_to_entity(parent)
+    )
