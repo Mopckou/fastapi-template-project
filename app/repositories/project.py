@@ -43,5 +43,4 @@ class ProjectRepository(BaseRepository, IProjectRepository):
 
     async def get_by_member(self, member_id: UUID) -> list[ProjectEntity]:
 
-
         return ProjectEntity(**vars(service))

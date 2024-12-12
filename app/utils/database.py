@@ -7,13 +7,13 @@ from sqlalchemy.orm import DeclarativeBase
 
 from sqlalchemy.ext.asyncio import (
     async_scoped_session,
-    async_sessionmaker,
+    async_sessionmaker, AsyncAttrs
 )
 
 logger = logging.getLogger(__name__)
 
 
-class Base(DeclarativeBase):
+class Base(AsyncAttrs, DeclarativeBase):
     pass
 
 

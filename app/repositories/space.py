@@ -10,6 +10,7 @@ from app.entities.space import SpaceEntity
 from app.models.space import SpaceModel
 from app.repositories.base import BaseRepository, IRepositoryBase
 
+DEPTH = 5
 
 class ISpaceRepository(IRepositoryBase):
     @abstractmethod
@@ -40,9 +41,22 @@ class SpaceRepository(BaseRepository, ISpaceRepository):
 
         result = (await self._session.scalars(
             select(SpaceModel).options(
-                selectinload(SpaceModel.children, recursion_depth=3),
-                selectinload(SpaceModel.parent, recursion_depth=3),  # проверить как работает глубина рекурсии
+                selectinload(SpaceModel.parent, recursion_depth=DEPTH),
             ).where(SpaceModel.id == id).join(SpaceModel.parent.of_type(parent_alias), full=True)
         )).unique().one_or_none()
 
-        return SpaceEntity(**vars(result)) if result else None
+        return await map_to_entity(result, DEPTH)
+
+
+async def map_to_entity(model: SpaceModel | None, depth: int) -> SpaceEntity | None:
+    if not model:
+        return None
+
+    if depth == 0:
+        return None
+
+    return SpaceEntity(
+        id=model.id,
+        name=model.name,
+        parent=await map_to_entity(model.parent, depth - 1)
+    )
